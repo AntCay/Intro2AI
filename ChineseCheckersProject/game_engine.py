@@ -10,33 +10,35 @@ class TwoPlayerCheckers:
         self.goal_map_p2[n-gs:, :gs] = np.tri(gs, dtype=np.bool)
         self._p1_mask = np.copy(self.goal_map_p2.T)
         self._p2_mask = self.goal_map_p2
-        self._game_state = (self._p1_mask, self._p2_mask, self.is_p1_turn)
 
     #region Properties
     @property
     def p1_mask(self):
-        return self._game_state[0]
+        return self._p1_mask
 
     @property
     def p2_mask(self):
-        return self._game_state[1]
+        return self._p2_mask
 
     @property
     def player_loc(self):
-        return self._game_state[0] + self._game_state[1]
+        return self._p1_mask + self._p2_mask
 
     @property
     def game_state(self):
-        return self._game_state
+        game_state = (self._p1_mask, self._p2_mask, self.is_p1_turn)
+        return game_state
     #endregion
 
-    def actions(self, state):
+    def actions(self, state = None):
+        if state is None:
+            state = self.game_state
         pad_size = 2
         player = state[~state[2]]
         player_loc = np.pad(state[0] + state[1], pad_size, constant_values=1)
 
         n = np.shape(player)[0]
-        unit_map = np.transpose(np.nonzero(player)) # maps unit indexes to their location
+        unit_map = np.swapaxes(np.nonzero(player), 0, 1) # maps unit indexes to their location
         actions = np.zeros((np.sum(player), n + 2 * pad_size, n + 2 * pad_size), dtype=np.bool)
         unsure_jumps = []
 
@@ -58,7 +60,7 @@ class TwoPlayerCheckers:
 
                 if new_landing_ids.size:
                     actions[i, y[new_landing_ids], x[new_landing_ids]] = True
-                    for new_landing_id in np.transpose([y[new_landing_ids] - pad_size, x[new_landing_ids] - pad_size]).tolist():
+                    for new_landing_id in np.swapaxes([y[new_landing_ids] - pad_size, x[new_landing_ids] - pad_size], 0, 1).tolist():
                         unsure_jumps.append(new_landing_id)
 
             # 2) Then add all adjacent moves
@@ -67,8 +69,23 @@ class TwoPlayerCheckers:
 
         return actions[:, 2:-2, 2:-2], unit_map
 
-    def result(self, state, action, unit_map):
-        pass
+    def results(self, actions, unit_map = None, state = None):
+        if state is None:
+            state = self.game_state
+        if unit_map is None:
+            unit_map = actions[1]
+            actions = actions[0]
+
+        player = state[~state[2]]
+        results = []
+        for i, unit in enumerate(unit_map):
+            for move in np.transpose(np.nonzero(actions[i, :, :])):
+                if move.size:
+                    result = np.copy(player)
+                    result[move[0], move[1]] = True
+                    result[unit[0], unit[1]] = False
+                    results.append(result)
+        return np.array(results)
 
     # Goal state check, should be used after updating the board. Can use it for the game loop while condition.
     def is_goal(self):
@@ -80,8 +97,10 @@ class TwoPlayerCheckers:
             return True
         return False
 
-    def update_state(self, action):
-        # Todo: Update current game position to be the result of the action taken.
+    def update_state(self, result):
+        if self.is_p1_turn:
+            self._p1_mask = result
+        else:
+            self._p2_mask = result
         self.is_p1_turn = ~self.is_p1_turn
-        if self.is_goal():
-            print("Game Over!")
+        return self.is_goal()
