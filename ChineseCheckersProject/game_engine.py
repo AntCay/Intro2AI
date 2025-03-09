@@ -3,13 +3,14 @@ import numpy as np
 class TwoPlayerCheckers:
     def __init__(self):
         n, gs = 9, 4 # n is the board size, gs is the number of rows in the starting position
-
-        self.is_p1_turn = True
+        self.max_turns = 200
+        self.turn_count = 0
+        self.is_p2_turn = False
         # Initialise starting player positions and player 2 goal mask, where [y, x] is the indexing.
-        self.goal_map_p2 = np.zeros((n, n), dtype=np.bool)
-        self.goal_map_p2[n-gs:, :gs] = np.tri(gs, dtype=np.bool)
-        self._p1_mask = np.copy(self.goal_map_p2.T)
-        self._p2_mask = self.goal_map_p2
+        self.goal_map_p1 = np.zeros((n, n), dtype=np.bool)
+        self.goal_map_p1[n-gs:, :gs] = np.tri(gs, dtype=np.bool)
+        self._p1_mask = self.goal_map_p1.T
+        self._p2_mask = np.copy(self.goal_map_p1)
 
     #region Properties
     @property
@@ -26,7 +27,7 @@ class TwoPlayerCheckers:
 
     @property
     def game_state(self):
-        game_state = (self._p1_mask, self._p2_mask, self.is_p1_turn)
+        game_state = (self._p1_mask, self._p2_mask, self.is_p2_turn)
         return game_state
     #endregion
 
@@ -34,7 +35,7 @@ class TwoPlayerCheckers:
         if state is None:
             state = self.game_state
         pad_size = 2
-        player = state[~state[2]]
+        player = state[state[2]]
         player_loc = np.pad(state[0] + state[1], pad_size, constant_values=1)
 
         n = np.shape(player)[0]
@@ -76,7 +77,7 @@ class TwoPlayerCheckers:
             unit_map = actions[1]
             actions = actions[0]
 
-        player = state[~state[2]]
+        player = state[state[2]]
         results = []
         for i, unit in enumerate(unit_map):
             for move in np.transpose(np.nonzero(actions[i, :, :])):
@@ -89,18 +90,22 @@ class TwoPlayerCheckers:
 
     # Goal state check, should be used after updating the board. Can use it for the game loop while condition.
     def is_goal(self):
-        if np.sum(self.goal_map_p2[self.player_loc]) == 10 and np.any(self.goal_map_p2[self.p2_mask]):
+        if np.sum(self.goal_map_p1.T[self.player_loc]) == 10 and np.any(self.goal_map_p1.T[self.p2_mask]):
             print("Player two wins!")
             return True
-        elif np.sum(self.goal_map_p2.T[self.player_loc]) == 10 and np.any(self.goal_map_p2.T[self.p1_mask]):
+        elif np.sum(self.goal_map_p1[self.player_loc]) == 10 and np.any(self.goal_map_p1[self.p1_mask]):
             print("Player one wins!")
+            return True
+        elif self.turn_count >= self.max_turns:
+            print("Max turns reached!")
             return True
         return False
 
     def update_state(self, result):
-        if self.is_p1_turn:
-            self._p1_mask = result
-        else:
+        if self.is_p2_turn:
             self._p2_mask = result
-        self.is_p1_turn = ~self.is_p1_turn
+        else:
+            self._p1_mask = result
+        self.is_p2_turn = not self.is_p2_turn
+        self.turn_count += 1
         return self.is_goal()
