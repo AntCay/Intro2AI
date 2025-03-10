@@ -53,13 +53,13 @@ class Board:
             x, y = getPixelCoordinates(row, col)
             pygame.draw.circle(self.screen, GRAY, (int(x), int(y)), CIRCLE_RADIUS)
             pygame.draw.circle(self.screen, BLACK, (int(x), int(y)), CIRCLE_RADIUS, 2)
-        pygame.draw.rect(self.screen, BLACK, pygame.Rect(950, 100, 500, 200), 2)
+        pygame.draw.rect(self.screen, BLACK, pygame.Rect(WIDTH - 550, 100, 500, 200), 2)
         font = pygame.font.SysFont(None, 30)
         text_surface = font.render("Game Status", True, BLACK)
-        text_rect = text_surface.get_rect(topleft = (960, 110))
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 540, 110))
         self._screen.blit(text_surface, text_rect)
         text_surface = font.render("Current Player:", True, BLACK)
-        text_rect = text_surface.get_rect(topleft = (960, 140))
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 540, 140))
         self._screen.blit(text_surface, text_rect)
 
     

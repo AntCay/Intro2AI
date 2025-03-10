@@ -13,6 +13,8 @@ import time
 class Game:
     def __init__(self, screen, playerNumber=2):
         self._screen = screen
+        self._end = False
+        self._winner = None
         self._board = Board(self._screen)
         self._pieces = Pieces(self._screen)
         self._engine = Engine()
@@ -37,6 +39,10 @@ class Game:
     @property
     def screen(self):
         return self._screen
+    
+    @property
+    def end(self):
+        return self._end
 
     @property
     def board(self):
@@ -73,7 +79,6 @@ class Game:
                     circle_x, circle_y = getPixelCoordinates(row, col)
                     if math.sqrt((circle_x - x - CELL_SIZE/10)**2 + (circle_y - y)**2) < CIRCLE_RADIUS:
                         self._clickedPiece = row, col
-                        print(f"centered {(circle_x, circle_y)}")
                         break
     @property
     def selectedPiece(self):
@@ -91,10 +96,10 @@ class Game:
         self.drawLegalMoves()
         font = pygame.font.SysFont(None, 28)
         if self._currentPlayer.isAI:
-            text_surface = font.render("AI ", True, "orange")
+            text_surface = font.render("AI ", True, self._currentPlayer.color)
         else :
-            text_surface = font.render("Player 1 ", True, "red")
-        text_rect = text_surface.get_rect(topleft = (1115, 140))
+            text_surface = font.render("Player 1 ", True, self._currentPlayer.color)
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 385, 140))
         self._screen.blit(text_surface, text_rect)
         pygame.display.flip()
         
@@ -104,7 +109,7 @@ class Game:
                 x, y = getPixelCoordinates(row, col)
                 pygame.draw.circle(self._screen, self._player[i].color, (int(x), int(y)), CIRCLE_RADIUS)
                 pygame.draw.circle(self._screen, BLACK, (int(x), int(y)), CIRCLE_RADIUS, 2)
-                # row, col = boardToEngine((row,col))
+                row, col = boardToEngine((row,col))
                 self.drawCoordinates(f"{row},{col}", (int(x), int(y)))
         return
     
@@ -153,8 +158,8 @@ class Game:
         if self.clickedPiece in self._board.board:
             if self.clickedPiece in self._currentPlayer.boardPos:
                 self._selectedPiece = (self._currentPlayer.color, self.clickedPiece)
-                # print(f"Select piece: {(self._selectedPiece[0], boardToEngine(self._selectedPiece[1]))}")
-                print(f"Select piece:  {self._selectedPiece}")
+                print(f"Select piece: {(self._selectedPiece[0], boardToEngine(self._selectedPiece[1]))}")
+                # print(f"Select piece:  {self._selectedPiece}")
                 for i, moves in self._currentPlayer.legalMoves:
                     if self._selectedPiece[1] == i:
                         movesE = []
@@ -175,6 +180,12 @@ class Game:
             row, col = boardToEngine(pos)
             mtx[row, col] = True
         self._engine.update_state(mtx)
+        if self.isGoal():
+            self._end = True
+            self._winner = self._currentPlayer
+            print(f"It's goal: {self._engine.game_state}")
+            return
+        
         print(f"current state: {self._engine.game_state}")
 
         if self._engine.game_state[2] == True:
@@ -204,18 +215,28 @@ class Game:
             self._player[0].boardPos.append(engineToBoard(pos))
         for pos in self._player[1].enginePos:
             self._player[1].boardPos.append(engineToBoard(pos))
-        
+            
+    def isGoal(self):
+        if self._currentPlayer == self._player[0]:
+            return np.array_equal(self._engine.game_state[0], self._engine.goal_map_p1)
+        else:
+            return np.array_equal(self._engine.game_state[1], self._engine.goal_map_p1.T)
+    
     def AIMove(self):
-        time.sleep(1)
+        time.sleep(0.5)
         print("AI Moved")
         self._ai[self._currentPlayer].randomMove()
-
+        if self.isGoal():
+            self._end = True
+            self._winner = self._currentPlayer
+            print(f"It's goal: {self._engine.game_state}")
+            return
+        
         print(f"current state: {self._engine.game_state}")
         if self._engine.game_state[2] == True:
             self._currentPlayer = self._player[1]
         else:
             self._currentPlayer = self._player[0]
-        
         self.setCurrentState()
         self.setLegalMoves()
     

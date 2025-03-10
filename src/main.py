@@ -4,7 +4,7 @@ from game import Game
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen = pygame.display.set_mode((0, 0))
     screen.fill(WHITE)
     pygame.display.set_caption(TITLE)
     clock = pygame.time.Clock()
@@ -13,17 +13,21 @@ def main():
     
     running = True
     while running:
+        clock.tick(FPS)
         game.draw()
-        if game.currentPlayer.isAI:
-            game.AIMove()
-        else:    
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+        if not game.end:
+            if game.currentPlayer.isAI:
+                game.AIMove()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+            else:    
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
 
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    print(f"raw pos{event.pos}")
-                    game.handleClick(event.pos)
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        game.handleClick(event.pos)
 
     pygame.quit()
 
