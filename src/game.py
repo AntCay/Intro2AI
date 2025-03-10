@@ -21,6 +21,7 @@ class Game:
         for i in range(self._playerNum):
             self._player.append(Player(i, COLORS[i]))
         self._player[1].isAI = True
+        self._player[0].isAI = True
         self._currentPlayer = self._player[0]
         self._clickedPiece = None
         self._selectedPiece = None
@@ -28,7 +29,7 @@ class Game:
         self._ai = {}
         for i in range(self._playerNum):
             if self._player[i].isAI:
-                self._ai = {self._player[i]  : (AI(self._engine))}
+                self._ai.update({self._player[i]  : (AI(self._engine))})
     
         self.setCurrentState()
         self.setLegalMoves()
