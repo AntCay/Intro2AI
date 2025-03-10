@@ -22,7 +22,7 @@ def main():
                     running = False
 
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    print(event.pos)
+                    print(f"raw pos{event.pos}")
                     game.handleClick(event.pos)
 
     pygame.quit()

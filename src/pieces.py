@@ -31,8 +31,8 @@ class Pieces:
         for color, positions in self._pieces.items():
             for row, col in positions:
                 x, y = getPixelCoordinates(row, col)
-                pygame.draw.circle(self._screen, color, (int(x), int(y)), CELL_SIZE // 2.5)
-                pygame.draw.circle(self._screen, BLACK, (int(x), int(y)), CELL_SIZE // 2.5, 2)
+                pygame.draw.circle(self._screen, color, (int(x), int(y)), CIRCLE_RADIUS)
+                pygame.draw.circle(self._screen, BLACK, (int(x), int(y)), CIRCLE_RADIUS, 2)
                 # self.drawCoordinates(f"{row},{col}", (int(x), int(y)))
     
     def drawCoordinates(self, text, position):

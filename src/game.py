@@ -63,13 +63,17 @@ class Game:
 
     @clickedPiece.setter
     def clickedPiece(self, position):
-        x, y = position
-        for row in range(BOARD_HEIGHT):
-            for col in range(BOARD_WIDTH):
-                circle_x, circle_y = getPixelCoordinates(row, col)
-                if math.sqrt((circle_x - x)**2 + (circle_y - y)**2) < 20:
-                    self._clickedPiece = row, col
-                    break
+        if position == None:
+            self._clickedPiece = None
+        else:
+            x, y = position
+            for row in range(BOARD_HEIGHT):
+                for col in range(BOARD_WIDTH):
+                    circle_x, circle_y = getPixelCoordinates(row, col)
+                    if math.sqrt((circle_x - x - CELL_SIZE/10)**2 + (circle_y - y)**2) < CIRCLE_RADIUS:
+                        self._clickedPiece = row, col
+                        print(f"centered {(circle_x, circle_y)}")
+                        break
     @property
     def selectedPiece(self):
         return self._selectedPiece
@@ -97,9 +101,9 @@ class Game:
         for i in range(self._playerNum):
             for row, col in self._player[i].boardPos:
                 x, y = getPixelCoordinates(row, col)
-                pygame.draw.circle(self._screen, self._player[i].color, (int(x), int(y)), CELL_SIZE // 2.5)
-                pygame.draw.circle(self._screen, BLACK, (int(x), int(y)), CELL_SIZE // 2.5, 2)
-                row, col = boardToEngine((row,col))
+                pygame.draw.circle(self._screen, self._player[i].color, (int(x), int(y)), CIRCLE_RADIUS)
+                pygame.draw.circle(self._screen, BLACK, (int(x), int(y)), CIRCLE_RADIUS, 2)
+                # row, col = boardToEngine((row,col))
                 self.drawCoordinates(f"{row},{col}", (int(x), int(y)))
         return
     
@@ -109,7 +113,7 @@ class Game:
                 if self._selectedPiece[1] == i:
                     for row, col in j:
                         x, y = getPixelCoordinates(row, col)
-                        pygame.draw.circle(self._screen, "green", (int(x), int(y)), CELL_SIZE // 2.5, 2)
+                        pygame.draw.circle(self._screen, "green", (int(x), int(y)), CIRCLE_RADIUS, 2)
                     return
     
     def setLegalMoves(self):
@@ -138,16 +142,18 @@ class Game:
         # print(f"move to {self.clickedPiece}")
         self._currentPlayer.removePiece(self._selectedPiece[1])
         self._currentPlayer.addPiece(self.clickedPiece)
+        self.clickedPiece = None
         self._selectedPiece = None
         self.humanMove()
     
     def handleClick(self, pos):
         self.clickedPiece = pos
+        print(self.clickedPiece)
         if self.clickedPiece in self._board.board:
             if self.clickedPiece in self._currentPlayer.boardPos:
                 self._selectedPiece = (self._currentPlayer.color, self.clickedPiece)
-                print(f"Select piece: {(self._selectedPiece[0], boardToEngine(self._selectedPiece[1]))}")
-                # print(f"Select piece:  {self._selectedPiece}")
+                # print(f"Select piece: {(self._selectedPiece[0], boardToEngine(self._selectedPiece[1]))}")
+                print(f"Select piece:  {self._selectedPiece}")
                 for i, moves in self._currentPlayer.legalMoves:
                     if self._selectedPiece[1] == i:
                         movesE = []

@@ -51,8 +51,8 @@ class Board:
     def drawBoard(self):
         for row, col in self.board:
             x, y = getPixelCoordinates(row, col)
-            pygame.draw.circle(self.screen, GRAY, (int(x), int(y)), CELL_SIZE // 2.5)
-            pygame.draw.circle(self.screen, BLACK, (int(x), int(y)), CELL_SIZE // 2.5, 2)
+            pygame.draw.circle(self.screen, GRAY, (int(x), int(y)), CIRCLE_RADIUS)
+            pygame.draw.circle(self.screen, BLACK, (int(x), int(y)), CIRCLE_RADIUS, 2)
         pygame.draw.rect(self.screen, BLACK, pygame.Rect(950, 100, 500, 200), 2)
         font = pygame.font.SysFont(None, 30)
         text_surface = font.render("Game Status", True, BLACK)
