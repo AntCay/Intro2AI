@@ -180,7 +180,7 @@ class Game:
             row, col = boardToEngine(pos)
             mtx[row, col] = True
         self._engine.update_state(mtx)
-        if self.isGoal():
+        if self._engine.is_goal():
             self._end = True
             self._winner = self._currentPlayer
             print(f"It's goal: {self._engine.game_state}")
@@ -216,17 +216,11 @@ class Game:
         for pos in self._player[1].enginePos:
             self._player[1].boardPos.append(engineToBoard(pos))
             
-    def isGoal(self):
-        if self._currentPlayer == self._player[0]:
-            return np.array_equal(self._engine.game_state[0], self._engine.goal_map_p1)
-        else:
-            return np.array_equal(self._engine.game_state[1], self._engine.goal_map_p1.T)
-    
     def AIMove(self):
         time.sleep(0.5)
         print("AI Moved")
         self._ai[self._currentPlayer].randomMove()
-        if self.isGoal():
+        if self._engine.is_goal():
             self._end = True
             self._winner = self._currentPlayer
             print(f"It's goal: {self._engine.game_state}")
