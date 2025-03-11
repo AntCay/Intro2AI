@@ -23,9 +23,9 @@ class ChooseGreedyNodeAI:
             distance = self.norm_distance_p1 + self.grid_distance_p1
         possible_moves = self._engine.results(self._engine.actions())
         if self._engine.turn_count % 3 == 0:
-            return possible_moves[np.random.choice(len(possible_moves))]
+            return self._engine.update_state(possible_moves[np.random.choice(len(possible_moves))])
         best_move = possible_moves[np.argmin(np.sum(distance[None] * possible_moves, axis=(1,2)))]
-        return best_move
+        return self._engine.update_state(best_move)
 
 
 # class SortaGreedyTreeSearchAI: # WIP

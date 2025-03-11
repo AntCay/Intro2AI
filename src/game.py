@@ -81,19 +81,19 @@ class Game:
             time.sleep(SLEEP_DURATION)
             self._currentPlayer.ai.move()
             self.updateBoardState()
-            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     return False
+            
         else:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    self.handleClick(event.pos)
-                    self.humanMove()
-                    self.updateBoardState()
-                    
-                if event.type == pygame.QUIT:
+                    if self.handleClick(event.pos):
+                        self.humanMove()
+                        self.updateBoardState()
+                elif event.type == pygame.QUIT:
                     return False
+                
         self.draw()
         return True
     
@@ -152,12 +152,12 @@ class Game:
                             movesE.append(boardToEngine(move))
                         # print(f"current legal moves: {movesE}")
                         # print(f"legal moves : {moves}")
-                return
+                return 0
             if self._selectedPiece:
                 for i, moves in self._currentPlayer.legalMoves:
                     if self._selectedPiece[1] == i and self.clickedPiece in moves:
                         self.movePiece()
-                        return
+                        return 1
     
     def movePiece(self):
         # fprint(f"move to {boardToEngine(self.clickedPiece)}")
@@ -173,11 +173,6 @@ class Game:
             row, col = boardToEngine(pos)
             mtx[row, col] = True
         self._engine.update_state(mtx)
-            
-        if self._engine.is_goal():
-            self._end = True
-            self._winner = self._currentPlayer
-            print(f"It's goal: {self._engine.game_state}")
         return
     
     def updateBoardState(self):
@@ -187,7 +182,11 @@ class Game:
             self._currentPlayer = self._player[0]
         self.setLegalMoves()
         self.setCurrentState()
-    
+        if self._engine.is_goal():
+            self._end = True
+            self._winner = self._currentPlayer
+            print(f"It's goal: {self._engine.game_state}")
+
     def setCurrentState(self):
         self._player[0].enginePos.clear()
         self._player[1].enginePos.clear()
