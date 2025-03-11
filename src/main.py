@@ -1,38 +1,30 @@
 import pygame
 from settings import *
 from game import Game
-
 from engine import Engine
+from player import Player
 import time
+from AI import randomAI
 import numpy as np
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((0, 0))
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
     screen.fill(WHITE)
     pygame.display.set_caption(TITLE)
     clock = pygame.time.Clock()
+    engine = Engine()
+    
+    player1 = Player(1, COLORS[0], True, randomAI(engine))
+    player2 = Player(2, COLORS[1], True, randomAI(engine))
 
-    game = Game(screen)
+    game = Game(screen, [player1, player2], engine)
     
     running = True
     while running:
-        clock.tick(FPS)
-        game.draw()
+        # clock.tick(FPS)
         if not game.end:
-            if game.currentPlayer.isAI:
-                game.AIMove()
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-            else:    
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        running = False
-
-                    elif event.type == pygame.MOUSEBUTTONDOWN:
-                        game.handleClick(event.pos)
-
+            running = game.loop()
     pygame.quit()
 
 def old_testing():

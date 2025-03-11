@@ -2,36 +2,24 @@ import pygame
 from settings import *
 from board import Board
 from pieces import Pieces
-from player import Player
 from utilities import *
-from engine import Engine
-from AI import AI
 import math
 import numpy as np
 import time
 
 class Game:
-    def __init__(self, screen, playerNumber=2):
+    def __init__(self, screen, player, engine):
         self._screen = screen
         self._end = False
         self._winner = None
         self._board = Board(self._screen)
         self._pieces = Pieces(self._screen)
-        self._engine = Engine()
-        self._playerNum = playerNumber
-        self._player = []
-        for i in range(self._playerNum):
-            self._player.append(Player(i, COLORS[i]))
-        self._player[1].isAI = True
-        self._player[0].isAI = True
+        self._engine = engine
+        self._playerNum = len(player)
+        self._player = player
         self._currentPlayer = self._player[0]
         self._clickedPiece = None
         self._selectedPiece = None
-        
-        self._ai = {}
-        for i in range(self._playerNum):
-            if self._player[i].isAI:
-                self._ai.update({self._player[i]  : (AI(self._engine))})
     
         self.setCurrentState()
         self.setLegalMoves()
@@ -87,6 +75,27 @@ class Game:
     @selectedPiece.setter
     def selectedPiece(self, value):
         self._selectedPiece = value
+        
+    def loop(self):
+        if self._currentPlayer.isAI:
+            time.sleep(SLEEP_DURATION)
+            self._currentPlayer.ai.move()
+            self.updateBoardState()
+            
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    return False
+        else:
+            for event in pygame.event.get():
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self.handleClick(event.pos)
+                    self.humanMove()
+                    self.updateBoardState()
+                    
+                if event.type == pygame.QUIT:
+                    return False
+        self.draw()
+        return True
     
     def draw(self):
         self.screen.fill(WHITE)
@@ -122,35 +131,11 @@ class Game:
                         pygame.draw.circle(self._screen, "green", (int(x), int(y)), CIRCLE_RADIUS, 2)
                     return
     
-    def setLegalMoves(self):
-        self._player[0].legalMoves.clear()
-        self._player[1].legalMoves.clear()
-        for i in range(len(self._player[0].enginePos)):
-            x = list(zip(*np.where(self._engine.actions()[0][i])))
-            lm = []
-            for j in x:
-                lm.append(engineToBoard(j))
-            self._player[0].legalMoves = (engineToBoard(self._engine.actions()[1][i]), lm)
-        
-        initial_state_p2 = list(self._engine.game_state)
-        initial_state_p2[2] = True
-        initial_state_p2 = tuple(initial_state_p2)
-        for i in range(len(self._player[1].enginePos)):
-            x = list(zip(*np.where(self._engine.actions(initial_state_p2)[0][i])))
-            lm = []
-            for j in x:
-                lm.append(engineToBoard(j))
-            self._player[1].legalMoves = (engineToBoard(self._engine.actions(initial_state_p2)[1][i]), lm)
-        return
-                
-    def movePiece(self):
-        # fprint(f"move to {boardToEngine(self.clickedPiece)}")
-        # print(f"move to {self.clickedPiece}")
-        self._currentPlayer.removePiece(self._selectedPiece[1])
-        self._currentPlayer.addPiece(self.clickedPiece)
-        self.clickedPiece = None
-        self._selectedPiece = None
-        self.humanMove()
+    def drawCoordinates(self, text, position):
+        font = pygame.font.SysFont(None, 24)
+        text_surface = font.render(text, True, BLACK)
+        text_rect = text_surface.get_rect(center=position)
+        self._screen.blit(text_surface, text_rect)
     
     def handleClick(self, pos):
         self.clickedPiece = pos
@@ -174,33 +159,34 @@ class Game:
                         self.movePiece()
                         return
     
+    def movePiece(self):
+        # fprint(f"move to {boardToEngine(self.clickedPiece)}")
+        # print(f"move to {self.clickedPiece}")
+        self._currentPlayer.removePiece(self._selectedPiece[1])
+        self._currentPlayer.addPiece(self.clickedPiece)
+        self.clickedPiece = None
+        self._selectedPiece = None
+    
     def humanMove(self):
         mtx = np.zeros((9, 9), dtype=np.bool)
         for pos in self._currentPlayer.boardPos:
             row, col = boardToEngine(pos)
             mtx[row, col] = True
         self._engine.update_state(mtx)
+            
         if self._engine.is_goal():
             self._end = True
             self._winner = self._currentPlayer
             print(f"It's goal: {self._engine.game_state}")
-            return
-        
-        # print(f"current state: {self._engine.game_state}")
-
+        return
+    
+    def updateBoardState(self):
         if self._engine.game_state[2] == True:
             self._currentPlayer = self._player[1]
         else:
             self._currentPlayer = self._player[0]
         self.setLegalMoves()
-            
-        return
-        
-    def drawCoordinates(self, text, position):
-        font = pygame.font.SysFont(None, 24)
-        text_surface = font.render(text, True, BLACK)
-        text_rect = text_surface.get_rect(center=position)
-        self._screen.blit(text_surface, text_rect)
+        self.setCurrentState()
     
     def setCurrentState(self):
         self._player[0].enginePos.clear()
@@ -216,21 +202,24 @@ class Game:
         for pos in self._player[1].enginePos:
             self._player[1].boardPos.append(engineToBoard(pos))
             
-    def AIMove(self):
-        time.sleep(SLEEP_DURATION)
-        # print("AI Moved")
-        self._ai[self._currentPlayer].randomMove()
-        if self._engine.is_goal():
-            self._end = True
-            self._winner = self._currentPlayer
-            # print(f"It's goal: {self._engine.game_state}")
-            return
+    def setLegalMoves(self):
+        self._player[0].legalMoves.clear()
+        self._player[1].legalMoves.clear()
+        for i in range(len(self._player[0].enginePos)):
+            x = list(zip(*np.where(self._engine.actions()[0][i])))
+            lm = []
+            for j in x:
+                lm.append(engineToBoard(j))
+            self._player[0].legalMoves = (engineToBoard(self._engine.actions()[1][i]), lm)
         
-        # print(f"current state: {self._engine.game_state}")
-        if self._engine.game_state[2] == True:
-            self._currentPlayer = self._player[1]
-        else:
-            self._currentPlayer = self._player[0]
-        self.setCurrentState()
-        self.setLegalMoves()
+        initial_state_p2 = list(self._engine.game_state)
+        initial_state_p2[2] = True
+        initial_state_p2 = tuple(initial_state_p2)
+        for i in range(len(self._player[1].enginePos)):
+            x = list(zip(*np.where(self._engine.actions(initial_state_p2)[0][i])))
+            lm = []
+            for j in x:
+                lm.append(engineToBoard(j))
+            self._player[1].legalMoves = (engineToBoard(self._engine.actions(initial_state_p2)[1][i]), lm)
+        return
     

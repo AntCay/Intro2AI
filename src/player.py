@@ -1,15 +1,20 @@
 class Player:
-    def __init__(self, no, color):
+    def __init__(self, no, color, isai, ai=None):
         self._color = color
         self._no = no
         self._enginePos = []
         self._boardPos = []
         self._legalMoves = []
-        self._isAI = False
+        self._isAI = isai
+        self._ai = ai
     
     @property
     def color(self):
         return self._color
+    
+    @property 
+    def ai(self):
+        return self._ai
     
     @property
     def enginePos(self):
@@ -48,5 +53,7 @@ class Player:
     @isAI.setter
     def isAI(self, value):
         self._isAI = value
+        
+        
         
         
