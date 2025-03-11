@@ -144,7 +144,7 @@ class Game:
         return
                 
     def movePiece(self):
-        print(f"move to {boardToEngine(self.clickedPiece)}")
+        # fprint(f"move to {boardToEngine(self.clickedPiece)}")
         # print(f"move to {self.clickedPiece}")
         self._currentPlayer.removePiece(self._selectedPiece[1])
         self._currentPlayer.addPiece(self.clickedPiece)
@@ -165,7 +165,7 @@ class Game:
                         movesE = []
                         for move in moves:
                             movesE.append(boardToEngine(move))
-                        print(f"current legal moves: {movesE}")
+                        # print(f"current legal moves: {movesE}")
                         # print(f"legal moves : {moves}")
                 return
             if self._selectedPiece:
@@ -186,7 +186,7 @@ class Game:
             print(f"It's goal: {self._engine.game_state}")
             return
         
-        print(f"current state: {self._engine.game_state}")
+        # print(f"current state: {self._engine.game_state}")
 
         if self._engine.game_state[2] == True:
             self._currentPlayer = self._player[1]
@@ -217,16 +217,16 @@ class Game:
             self._player[1].boardPos.append(engineToBoard(pos))
             
     def AIMove(self):
-        time.sleep(0.5)
-        print("AI Moved")
+        time.sleep(SLEEP_DURATION)
+        # print("AI Moved")
         self._ai[self._currentPlayer].randomMove()
         if self._engine.is_goal():
             self._end = True
             self._winner = self._currentPlayer
-            print(f"It's goal: {self._engine.game_state}")
+            # print(f"It's goal: {self._engine.game_state}")
             return
         
-        print(f"current state: {self._engine.game_state}")
+        # print(f"current state: {self._engine.game_state}")
         if self._engine.game_state[2] == True:
             self._currentPlayer = self._player[1]
         else:

@@ -1,9 +1,10 @@
 import numpy as np
+from settings import *
 
 class Engine:
     def __init__(self):
         n, gs = 9, 4 # n is the board size, gs is the number of rows in the starting position
-        self.max_turns = 200
+        self.max_turns = MAX_MOVES
         self.turn_count = 0
         self.is_p2_turn = False
         # Initialise starting player positions and player 2 goal mask, where [y, x] is the indexing.
