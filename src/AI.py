@@ -46,9 +46,6 @@ class AStarAI:
         possible_moves = self._engine.results(self._engine.actions())
             
         heuristic_all = np.sum(heuristic * possible_moves, axis=(1,2))
-        if self._engine.game_state[2]:
-            print(heuristic_all)
-            print(heuristic * possible_moves)
         self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))
         best_move = possible_moves[np.argmin(self.evaluation)]
         
