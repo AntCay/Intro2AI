@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class randomAI:
     def __init__(self, engine):
@@ -27,6 +28,31 @@ class ChooseGreedyNodeAI:
         best_move = possible_moves[np.argmin(np.sum(distance[None] * possible_moves, axis=(1,2)))]
         return self._engine.update_state(best_move)
 
+# A* Algorithm with Manhattan Distance as a heuristic function
+class AStarAI:
+    def  __init__(self, engine):
+        n, gs = 9, 4
+        self._engine = engine
+        self.heuristic = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
+        self.cost = 0
+        self.evaluation = 0
+        
+    def move(self):
+        if self._engine.game_state[2]:
+            heuristic = self.heuristic.T
+        else:
+            heuristic = self.heuristic
+        
+        possible_moves = self._engine.results(self._engine.actions())
+            
+        heuristic_all = np.sum(heuristic * possible_moves, axis=(1,2))
+        if self._engine.game_state[2]:
+            print(heuristic_all)
+            print(heuristic * possible_moves)
+        self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))
+        best_move = possible_moves[np.argmin(self.evaluation)]
+        
+        return self._engine.update_state(best_move)
 
 # class SortaGreedyTreeSearchAI: # WIP
 #     def __init__(self, engine, depth=1):
