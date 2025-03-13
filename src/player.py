@@ -7,6 +7,10 @@ class Player:
         self._legalMoves = []
         self._isAI = isai
         self._ai = ai
+        if isai:
+            self._name = ai.__class__.__name__
+        else:
+            self._name = "Player " + str(no)
     
     @property
     def color(self):
@@ -31,6 +35,10 @@ class Player:
     @property
     def isAI(self):
         return self._isAI
+
+    @property
+    def name(self):
+        return self._name
     
     def removePiece(self, position):
         self._boardPos.remove(position)
@@ -52,7 +60,20 @@ class Player:
         
     @isAI.setter
     def isAI(self, value):
+        if value:
+            self._name = self._ai.__class__.__name__
+        else:
+            self._name = "Player " + str(self._no)
         self._isAI = value
+    
+    @ai.setter
+    def ai(self, value):
+        self._ai  = value
+    
+    @name.setter
+    def name(self, value):
+        self._name = value
+
         
         
         

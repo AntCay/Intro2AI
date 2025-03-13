@@ -31,6 +31,14 @@ class Engine:
         game_state = (self._p1_mask, self._p2_mask, self.is_p2_turn)
         return game_state
     #endregion
+    
+    @p1_mask.setter
+    def p1_mask(self, p1_mask):
+        self._p1_mask = p1_mask
+
+    @p2_mask.setter
+    def p2_mask(self, p2_mask):
+        self._p2_mask = p2_mask
 
     def actions(self, state = None):
         if state is None:

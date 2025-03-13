@@ -1,8 +1,10 @@
 import pygame
 from settings import *
-from board import Board
-from pieces import Pieces
+from board import *
 from utilities import *
+import AI
+from AI import *
+import inspect
 import math
 import numpy as np
 import time
@@ -12,8 +14,25 @@ class Game:
         self._screen = screen
         self._end = False
         self._winner = None
+        self._moveCount = 0
         self._board = Board(self._screen)
         self._pieces = Pieces(self._screen)
+        self._backButton = Button(self._screen, 'red', BUTTON_MENU_FONT, "Back", (150, 75), (50, 50))
+        self._restartButton = Button(self._screen, 'red', BUTTON_MENU_FONT, "Restart", (150, 75), (220, 50))
+        self._closeButton = Button(self._screen, 'red', BUTTON_MENU_FONT, "Close", (150, 75), (WIDTH - 200, 50))
+        self._stopButton = Button(self._screen, 'red', BUTTON_MENU_FONT, "Stop", (150, 75), (WIDTH - 375, 50))
+        self._mainMenuButton = []
+        self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "AI vs AI", (200, 100), ((WIDTH - 200)*0.4, (HEIGHT - 100)*0.4)))
+        self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "Player vs AI", (200, 100), ((WIDTH - 200)*0.5, (HEIGHT - 100)*0.4)))
+        self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "Player vs Player", (200, 100), ((WIDTH - 200)*0.6, (HEIGHT - 100)*0.4)))
+        
+        self._aiOptionButton = []
+        self._aiList = []
+        for i in range(len(inspect.getmembers(AI, inspect.isclass))):      
+            self._aiOptionButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, inspect.getmembers(AI, inspect.isclass)[i][0], (300, 100), ((WIDTH - 200)*0.4, (HEIGHT - 100)*(0.4+i*0.1))))
+        
+        self._loopNum = 0
+        self._gameMode = 0
         self._engine = engine
         self._playerNum = len(player)
         self._player = player
@@ -77,39 +96,151 @@ class Game:
         self._selectedPiece = value
         
     def loop(self):
-        if self._currentPlayer.isAI:
-            time.sleep(SLEEP_DURATION)
-            self._currentPlayer.ai.move()
-            self.updateBoardState()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    return False
-            
+        if self._loopNum == 0:
+            return self.mainMenuLoop()
+        elif self._loopNum == 1:
+            return self.gamePlayLoop()
+        elif self._loopNum == 2:
+            return self.AIMenuLoop()
+        # return True
+    
+    def gamePlayLoop(self):
+        self.screen.fill(WHITE)
+        self.drawGamePlay()
+        if not self._end:
+            if self._currentPlayer.isAI:
+                time.sleep(SLEEP_DURATION)
+                self._currentPlayer.ai.move()
+                self._moveCount += 1
+                self.updateBoardState()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        return False
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if self._closeButton.rect.collidepoint(event.pos):
+                            return False
+                        elif self._stopButton.rect.collidepoint(event.pos):
+                            self.restart()
+                            self._end = True
+            else:
+                for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if self._backButton.rect.collidepoint(event.pos):
+                            self.restart()
+                            self._loopNum = 0
+                        elif self._closeButton.rect.collidepoint(event.pos):
+                            return False
+                        elif self._restartButton.rect.collidepoint(event.pos):
+                            self.restart()
+                        elif self.handleClick(event.pos):
+                            self.humanMove()
+                            self._moveCount += 1
+                            self.updateBoardState()
+                    elif event.type == pygame.QUIT:
+                        return False
+        
         else:
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if self.handleClick(event.pos):
-                        self.humanMove()
-                        self.updateBoardState()
+                    if self._backButton.rect.collidepoint(event.pos):
+                        self.restart()
+                        self._loopNum = 0
+                    elif self._restartButton.rect.collidepoint(event.pos):
+                        self.restart()
+                    elif self._closeButton.rect.collidepoint(event.pos):
+                        return False
                 elif event.type == pygame.QUIT:
                     return False
-                
-        self.draw()
+        return True
+
+    def mainMenuLoop(self):
+        self.screen.fill(WHITE)
+        titleText = pygame.font.Font(size=int(WIDTH*0.05)).render(
+            "Two Player Chinese Checkers", True, 'green')
+        titleTextRect = titleText.get_rect()
+        titleTextRect.center = (WIDTH*0.5, HEIGHT*0.25)
+        self.screen.blit(titleText, titleTextRect)
+        
+        for btn in self._mainMenuButton:
+            btn.draw()
+        self._closeButton.draw()
+        
+        pygame.display.flip()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self._mainMenuButton[0].rect.collidepoint(event.pos):
+                    self._gameMode = 0
+                    for i in range(self._playerNum):
+                        self._player[i].isAI = True
+                    self._loopNum = 1
+                elif self._mainMenuButton[1].rect.collidepoint(event.pos):
+                    self._gameMode = 1
+                    self._player[0].isAI = False
+                    self._player[1].isAI = True
+                    self._loopNum = 1
+                elif self._mainMenuButton[2].rect.collidepoint(event.pos):
+                    self._gameMode = 2
+                    for i in range(self._playerNum):
+                        self._player[i].isAI = False
+                    self._loopNum = 1
+                elif self._closeButton.rect.collidepoint(event.pos):
+                    return False
+                    
+            elif event.type == pygame.QUIT:
+                return False
+
         return True
     
-    def draw(self):
+    def AIMenuLoop(self):
         self.screen.fill(WHITE)
+        titleText = pygame.font.Font(size=int(WIDTH*0.08)).render(
+            "Chinese Checkers", True, 'green')
+        titleTextRect = titleText.get_rect()
+        titleTextRect.center = (WIDTH*0.5, HEIGHT*0.25)
+        self.screen.blit(titleText, titleTextRect)
+        
+        for btn in self._aiOptionButton:
+            btn.draw()
+        
+        self._backButton.draw()
+        
+        pygame.display.flip()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if self._backButton.rect.collidepoint(event.pos):
+                    self._loopNum = 0
+                else:
+                    for i in self._aiOptionButton:
+                        if i.rect.collidepoint(event.pos):
+                            i.color = 'green'
+                            self._loopNum = 1
+                    
+            elif event.type == pygame.QUIT:
+                return False
+            
+        return True
+        
+    def drawGamePlay(self):
         self.board.drawBoard()
         self.pieces.drawPieces()
         self.drawPlayers()
         self.drawLegalMoves()
-        font = pygame.font.SysFont(None, 28)
-        if self._currentPlayer.isAI:
-            text_surface = font.render("AI ", True, self._currentPlayer.color)
-        else :
-            text_surface = font.render("Player 1 ", True, self._currentPlayer.color)
-        text_rect = text_surface.get_rect(topleft = (WIDTH - 385, 140))
+        text_surface = GAME_STATUS_FONT.render(self._player[0].name + " vs " + self._player[1].name, True, BLACK)
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 565, 200))
         self._screen.blit(text_surface, text_rect)
+        text_surface = GAME_STATUS_FONT.render(self._currentPlayer.name, True, self._currentPlayer.color)
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 485, 230))
+        self._screen.blit(text_surface, text_rect)
+        text_surface = GAME_STATUS_FONT.render(str(self._moveCount), True, BLACK)
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 485, 260))
+        self._screen.blit(text_surface, text_rect)
+        self._backButton.draw()
+        self._restartButton.draw()
+        self._closeButton.draw()
+        self._stopButton.draw()
+        
         pygame.display.flip()
         
     def drawPlayers(self):
@@ -132,8 +263,7 @@ class Game:
                     return
     
     def drawCoordinates(self, text, position):
-        font = pygame.font.SysFont(None, 24)
-        text_surface = font.render(text, True, BLACK)
+        text_surface = CORDINATES_FONT.render(text, True, BLACK)
         text_rect = text_surface.get_rect(center=position)
         self._screen.blit(text_surface, text_rect)
     
@@ -221,4 +351,13 @@ class Game:
                 lm.append(engineToBoard(j))
             self._player[1].legalMoves = (engineToBoard(self._engine.actions(initial_state_p2)[1][i]), lm)
         return
+    
+    def restart(self):
+        self._engine.p1_mask = self._engine.goal_map_p1.T
+        self._engine.p2_mask = np.copy(self._engine.goal_map_p1)
+        self._engine.is_p2_turn = False
+        self._end = False
+        self._moveCount = 0
+        self._winner = None
+        self.updateBoardState()
     

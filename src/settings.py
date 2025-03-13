@@ -13,3 +13,8 @@ MAX_MOVES = 10000
 TITLE = "Chinese Checkers"
 WHITE, BLACK, GRAY = (255, 255, 255), (0, 0, 0), (200, 200, 200)
 COLORS = ["red", "orange", "yellow", "green", "purple", "blue"]
+BUTTON_MENU_FONT = pygame.font.Font(None, 36)
+GAME_STATUS_FONT = pygame.font.Font(None, 30)
+CORDINATES_FONT = pygame.font.Font(None, 24)
+
+

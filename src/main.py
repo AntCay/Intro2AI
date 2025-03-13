@@ -6,6 +6,7 @@ from player import Player
 import time
 from AI import *
 import numpy as np
+import sys
 
 def main():
     pygame.init()
@@ -15,18 +16,19 @@ def main():
     clock = pygame.time.Clock()
     engine = Engine()
     
-    player1 = Player(1, COLORS[0], False, ChooseGreedyNodeAI(engine))
+    player1 = Player(1, COLORS[0], True, ChooseGreedyNodeAI(engine))
     player2 = Player(2, COLORS[1], True, ChooseGreedyNodeAI(engine))
 
     game = Game(screen, [player1, player2], engine)
-    
     running = True
     while running:
         # clock.tick(FPS)
-        if not game.end:
+        # if not game.end:
+            # running = game.loop()
             running = game.loop()
          
     pygame.quit()
+    sys.exit()
 
 def old_testing():
     game = Engine()
