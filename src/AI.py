@@ -38,6 +38,7 @@ class AStarAI:
         self.evaluation = 0
         
     def move(self):
+        self.cost += 1
         if self._engine.game_state[2]:
             heuristic = self.heuristic.T
         else:
@@ -46,9 +47,10 @@ class AStarAI:
         possible_moves = self._engine.results(self._engine.actions())
             
         heuristic_all = np.sum(heuristic * possible_moves, axis=(1,2))
-        self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))
-        best_move = possible_moves[np.argmin(self.evaluation)]
         
+        self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))        
+        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
         return self._engine.update_state(best_move)
 
 # class SortaGreedyTreeSearchAI: # WIP

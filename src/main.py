@@ -17,7 +17,7 @@ def main():
     engine = Engine()
     
     player1 = Player(1, COLORS[0], True, AStarAI(engine))
-    player2 = Player(2, COLORS[1], True, AStarAI(engine))
+    player2 = Player(2, COLORS[1], True, ChooseGreedyNodeAI(engine))
 
     game = Game(screen, [player1, player2], engine)
     running = True
