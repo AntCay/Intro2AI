@@ -10,7 +10,9 @@ import numpy as np
 import time
 
 class Game:
-    def __init__(self, screen, player, engine):
+    def __init__(self, screen, player, engine, maxGame):
+        self._maxGame = maxGame
+        self._replay = 0
         self._screen = screen
         self._end = False
         self._winner = None
@@ -140,6 +142,10 @@ class Game:
                         return False
         
         else:
+            if(self._replay == self._maxGame):
+                return False
+            self._replay += 1
+            self.restart()
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self._backButton.rect.collidepoint(event.pos):
@@ -315,7 +321,9 @@ class Game:
         if self._engine.is_goal():
             self._end = True
             self._winner = self._currentPlayer
-            print(f"It's goal: {self._engine.game_state}")
+            # print(self._moveCount)
+            # print(self._winner.name)
+            # print(f"It's goal: {self._engine.game_state}")
 
     def setCurrentState(self):
         self._player[0].enginePos.clear()

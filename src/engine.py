@@ -98,14 +98,20 @@ class Engine:
 
     # Goal state check, should be used after updating the board. Can use it for the game loop while condition.
     def is_goal(self):
-        if np.sum(self.goal_map_p1.T[self.player_loc]) == 10 and np.any(self.goal_map_p1.T[self.p2_mask]):
-            print("Player two wins!")
+        # if np.sum(self.goal_map_p1.T[self.player_loc]) == 10 and np.any(self.goal_map_p1.T[self.p2_mask]):
+        #     print("Player two wins!")
+        #     return True
+        # elif np.sum(self.goal_map_p1[self.player_loc]) == 10 and np.any(self.goal_map_p1[self.p1_mask]):
+        #     print("Player one wins!")
+        #     return True
+        # elif self.turn_count >= self.max_turns:
+        #     print("Max turns reached!")
+        #     return True
+        
+        # Edited Goal Check
+        if (self._p1_mask == self.goal_map_p1).all():
             return True
-        elif np.sum(self.goal_map_p1[self.player_loc]) == 10 and np.any(self.goal_map_p1[self.p1_mask]):
-            print("Player one wins!")
-            return True
-        elif self.turn_count >= self.max_turns:
-            print("Max turns reached!")
+        elif (self._p2_mask == self.goal_map_p1.T).all():
             return True
         return False
 
