@@ -8,11 +8,16 @@ import inspect
 import math
 import numpy as np
 import time
+import csv
 
 class Game:
-    def __init__(self, screen, player, engine, maxGame):
-        self._maxGame = maxGame
-        self._replay = 0
+    def __init__(self, screen, player, engine, maxMatches, result_path):
+        self._result_path = result_path
+        self._result = [
+            ["match_number", "winner", "moves_count", "loser's_pieces_left", "loser's_moves_left"]
+        ]
+        self._maxMatches = maxMatches
+        self._replay = 1
         self._screen = screen
         self._end = False
         self._winner = None
@@ -142,10 +147,21 @@ class Game:
                         return False
         
         else:
-            if(self._replay == self._maxGame):
-                return False
-            self._replay += 1
-            self.restart()
+            # time.sleep(1)
+            if(self._replay != self._maxMatches):
+                self._replay += 1
+                self.restart()
+            else:
+                with open(self._result_path, mode='w', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerows(self._result)
+                self.restart()
+                self._result = [
+                    ["match_number", "winner", "moves_count", "loser's_pieces_left", "loser's_moves_left"]
+                ]
+                self._replay = 1
+                self._loopNum = 0
+                # return False    
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if self._backButton.rect.collidepoint(event.pos):
@@ -242,6 +258,9 @@ class Game:
         text_surface = GAME_STATUS_FONT.render(str(self._moveCount), True, BLACK)
         text_rect = text_surface.get_rect(topleft = (WIDTH - 485, 260))
         self._screen.blit(text_surface, text_rect)
+        text_surface = GAME_STATUS_FONT.render(str(self._replay), True, BLACK)
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 485, 290))
+        self._screen.blit(text_surface, text_rect)
         self._backButton.draw()
         self._restartButton.draw()
         self._closeButton.draw()
@@ -312,18 +331,35 @@ class Game:
         return
     
     def updateBoardState(self):
+        if self._engine.is_goal():
+            self._end = True
+            self._winner = self._currentPlayer
+            
+            if(self._winner == self._player[0]):
+                state = np.logical_xor(self._engine.p2_mask, self._engine.goal_map_p1.T)
+                heuristic = np.sum(np.mgrid[0:9, 0:9][:, ::-1, :],axis=0).T
+            else:
+                state = np.logical_xor(self._engine.p1_mask, self._engine.goal_map_p1)
+                heuristic = np.sum(np.mgrid[0:9, 0:9][:, ::-1, :],axis=0)
+            moves_left = 0
+            left_pieces = state * (heuristic >= 4)
+            left_pieces = np.array(list(zip(*np.where(left_pieces))))
+            left_goal = state * (heuristic < 4)
+            left_goal = np.array(list(zip(*np.where(left_goal))))
+            for i in range(len(left_pieces)):
+                moves_left = moves_left + abs(left_pieces[i][0] - left_goal[i][0]) + abs(left_pieces[i][1] - left_goal[i][1])
+            self._result.append([self._replay,self._winner.name, self._moveCount, len(left_pieces), int(moves_left)])
+            # print(f"It's goal: {self._engine.game_state}")
+        elif self._moveCount >= MAX_MOVES:
+            self._end = True
+            self._result.append([self._replay,"-", "~", "-"])
+        
         if self._engine.game_state[2] == True:
             self._currentPlayer = self._player[1]
         else:
             self._currentPlayer = self._player[0]
         self.setLegalMoves()
         self.setCurrentState()
-        if self._engine.is_goal():
-            self._end = True
-            self._winner = self._currentPlayer
-            # print(self._moveCount)
-            # print(self._winner.name)
-            # print(f"It's goal: {self._engine.game_state}")
 
     def setCurrentState(self):
         self._player[0].enginePos.clear()
@@ -363,7 +399,7 @@ class Game:
     def restart(self):
         self._engine.p1_mask = self._engine.goal_map_p1.T
         self._engine.p2_mask = np.copy(self._engine.goal_map_p1)
-        self._engine.is_p2_turn = False
+        self._engine.is_p2_turn = True
         self._end = False
         self._moveCount = 0
         self._winner = None

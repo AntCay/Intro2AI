@@ -66,6 +66,9 @@ class Board:
         text_surface = GAME_STATUS_FONT.render("Moves Count:", True, BLACK)
         text_rect = text_surface.get_rect(topleft = (WIDTH - 640, 260))
         self._screen.blit(text_surface, text_rect)
+        text_surface = GAME_STATUS_FONT.render("Match Number:", True, BLACK)
+        text_rect = text_surface.get_rect(topleft = (WIDTH - 640, 290))
+        self._screen.blit(text_surface, text_rect)
 
 class Pieces:
     def __init__(self, screen):

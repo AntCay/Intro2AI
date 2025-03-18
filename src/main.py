@@ -17,9 +17,12 @@ def main():
     engine = Engine()
     
     player1 = Player(1, COLORS[0], True, AStarAI_h2(engine))
-    player2 = Player(2, COLORS[1], True, AStarAI_h1(engine))
-
-    game = Game(screen, [player1, player2], engine, 10)
+    player2 = Player(2, COLORS[1], True, AStarAI_h2(engine))
+    max_matches = 2
+    
+    result_path = "../result/{}_vs_{}.csv".format(player1.name, player2.name)
+    
+    game = Game(screen, [player1, player2], engine, max_matches, result_path)
     running = True
     while running:
         # clock.tick(FPS)
