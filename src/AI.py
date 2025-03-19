@@ -119,7 +119,61 @@ class AStarAI_h2:
             
         heuristic_all = np.sum(heuristic * possible_moves, axis=(1,2))
         
-        self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))        
+        self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))
+
+        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
+        return self._engine.update_state(best_move)
+
+# Algorithm that looks ahead one more move for each possible move.
+class LookAhead_h2:
+    def  __init__(self, engine: Engine):
+        n, gs = 9, 4
+        self._engine: Engine = engine
+        self.heuristic = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
+        self.evaluation = 0
+        
+    def move(self):
+        if self._engine.game_state[2]:
+            heuristic = self.heuristic.T
+        else:
+            heuristic = self.heuristic
+        
+        possible_moves = self._engine.results(self._engine.actions())
+        possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
+
+        # save current engine state for resetting
+        cur_p1_mask = self._engine._p1_mask
+        cur_p2_mask = self._engine._p2_mask
+        cur_turn = self._engine.is_p2_turn
+        cur_turn_count = self._engine.turn_count
+
+        # iterate through possible moves
+        for i, move in enumerate(possible_moves):
+
+            # check if move achieves goal state
+            if self._engine.update_state(move):
+                # if it does, reset effects of update_state and return updated state
+                self._engine._p1_mask = cur_p1_mask
+                self._engine._p2_mask = cur_p2_mask
+                self._engine.is_p2_turn = cur_turn
+                self._engine.turn_count = cur_turn_count
+                return self._engine.update_state(move)
+            # if not, make the engine think it is our move again and get possible moves
+            else:
+                self._engine.is_p2_turn = cur_turn
+                self._engine.turn_count = cur_turn_count
+                possible_next_moves = self._engine.results(self._engine.actions())
+                next_move_heuristics = np.sum(heuristic * possible_next_moves, axis=(1, 2))
+                possible_moves_heuristics[i] += np.min(next_move_heuristics)
+
+            # restore state to our original turn
+            self._engine._p1_mask = cur_p1_mask
+            self._engine._p2_mask = cur_p2_mask
+            self._engine.is_p2_turn = cur_turn
+            self._engine.turn_count = cur_turn_count
+
+        self.evaluation = possible_moves_heuristics
         best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
         best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
         return self._engine.update_state(best_move)
