@@ -29,24 +29,26 @@ def analyze_results(result_folder):
 
 def plot_histogram(all_results):
     """
-    Plots a histogram of the number of wins for each algorithm.
+    Plots a histogram of the number of wins for each algorithm across all files.
     """
-    for fname, rows in all_results.items():
-        win_distribution = {}
+    win_distribution = {}
 
+    win_distribution = {}
+
+    for rows in all_results.values():
         for row in rows:
             winner = row['winner']
             if winner not in win_distribution:
                 win_distribution[winner] = 0
             win_distribution[winner] += 1
 
-        # Plot histogram
-        plt.figure(figsize=(10, 5))
-        plt.bar(win_distribution.keys(), win_distribution.values())
-        plt.xlabel('Algorithm')
-        plt.ylabel('Number of Wins')
-        plt.title(f'Win Distribution for {fname}')
-        plt.show()
+    # Plot histogram
+    plt.figure(figsize=(10, 5))
+    plt.bar(win_distribution.keys(), win_distribution.values())
+    plt.xlabel('Algorithm')
+    plt.ylabel('Number of Wins')
+    plt.title('Win Distribution Across All Files')
+    plt.show()
 
 # Adjust this path to point to your "result" folder
 result_folder = r"c:\Workspace\Git\Master repos\Intro2AI\result"
