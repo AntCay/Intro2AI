@@ -295,12 +295,10 @@ class  MCTSAI:
         root_node = self.Node(e.game_state)
         # start MCTS Algorithm
         self.mcts(root_node)
-        # best_move = max(root_node.children.items(), key=lambda item: item[1].reward)[0]
         best_move = max(
             root_node.children.items(),
             key=lambda item: (item[1].reward / item[1].visits if item[1].visits != 0 else -float('inf'))
         )[0] # Choose the best move of children that has highest average reward
-        # print(f"best move: {best_move}")
         return self._engine.update_state(np.array(best_move))  
     
     def mcts(self, root_node):
@@ -377,10 +375,8 @@ class  MCTSAI:
             depth = depth + 1
             
         if root_node.player != selected_node.player:
-            # print("P2 Wins")
             return 1
         else:
-            # print("P1 Wins")
             return 0
 
     def backpropagate(self, root_node, selected_node, reward):  # Backpropagate the reward from the selected node to the root node
