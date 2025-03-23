@@ -7,6 +7,7 @@ import math
 import numpy as np
 import time
 import csv
+from copy import deepcopy
 
 class Game:
     def __init__(self, screen, player, engine, maxMatches, result_path):
@@ -146,11 +147,13 @@ class Game:
         
         else:
             # time.sleep(1)
-            if(self._replay != self._maxMatches):
-                if(self._replay >= self._maxMatches/2):
+            if(self._replay != self._maxMatches + 1):
+                if(self._replay == int(self._maxMatches/2 + 1)):
                     temp = self._player[0].ai
                     self._player[0].ai = self._player[1].ai
                     self._player[1].ai = temp
+                    self._player[0].name = self._player[0].ai.__class__.__name__
+                    self._player[1].name = self._player[1].ai.__class__.__name__
                 self._replay += 1
                 self.restart()
             else:
