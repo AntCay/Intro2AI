@@ -530,7 +530,10 @@ class  MCTSAI:
             return self.e.results(self.e.actions())
         
         def getBestLegalMoves(self):
-            heuristic = np.sum(self.heuristic * self.getLegalMoves(), axis=(1,2))    
+            if self.player:
+                heuristic = np.sum(self.heuristic.T * self.getLegalMoves(), axis=(1,2))    
+            else:
+                heuristic = np.sum(self.heuristic * self.getLegalMoves(), axis=(1,2))    
             best_moves_index = np.where(heuristic == np.min(heuristic))[0]
             best_moves = np.empty((0,) + self.getLegalMoves().shape[1:], dtype=self.getLegalMoves().dtype)
             for x in best_moves_index:

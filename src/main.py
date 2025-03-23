@@ -16,9 +16,9 @@ def main():
     clock = pygame.time.Clock()
     engine = Engine()
     
-    player1 = Player(1, COLORS[0], True, LookAhead_h2(engine))
-    player2 = Player(2, COLORS[1], True, MiniMax_h1_h2(engine))
-    max_matches = 10
+    player1 = Player(1, COLORS[0], True, MiniMax_h1_h2(engine))
+    player2 = Player(2, COLORS[1], True, MCTSAI(engine))
+    max_matches = 3
     
     result_path = "../result/{}_vs_{}.csv".format(player1.name, player2.name)
     
