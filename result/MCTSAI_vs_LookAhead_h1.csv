@@ -1,0 +1,11 @@
+match_number,winner,moves_count,loser's_pieces_left,loser's_moves_left
+1,LookAhead_h1,90,4,15
+2,LookAhead_h1,77,5,26
+3,LookAhead_h1,99,1,4
+4,LookAhead_h1,55,6,52
+5,LookAhead_h1,85,3,8
+6,LookAhead_h1,109,2,16
+7,LookAhead_h1,123,1,5
+8,LookAhead_h1,107,1,7
+9,LookAhead_h1,111,1,5
+10,LookAhead_h1,111,2,9
