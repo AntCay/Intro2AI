@@ -139,7 +139,7 @@ class LookAhead_h1:
         if self._engine.game_state[2]:
             heuristic = self.norm_distance_p1.T + self.grid_distance_p1.T
         else:
-            heuristic = self.norm_distance_p1.T + self.grid_distance_p1
+            heuristic = self.norm_distance_p1 + self.grid_distance_p1
         
         possible_moves = self._engine.results(self._engine.actions())
         possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
@@ -247,7 +247,7 @@ class MiniMax_h1:
         if self._engine.game_state[2]:
             heuristic = self.norm_distance_p1.T + self.grid_distance_p1.T
         else:
-            heuristic = self.norm_distance_p1.T + self.grid_distance_p1
+            heuristic = self.norm_distance_p1 + self.grid_distance_p1
         
         possible_moves = self._engine.results(self._engine.actions())
         possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
