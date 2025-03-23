@@ -132,7 +132,7 @@ class LookAhead_h1:
         if self._engine.game_state[2]:
             heuristic = self.norm_distance_p1.T + self.grid_distance_p1.T
         else:
-            heuristic = self.norm_distance_p1.T + self.grid_distance_p1
+            heuristic = self.norm_distance_p1 + self.grid_distance_p1
         
         possible_moves = self._engine.results(self._engine.actions())
         possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
@@ -225,6 +225,267 @@ class LookAhead_h2:
         best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
         best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
         return self._engine.update_state(best_move)
+
+# minimax h1
+class MiniMax_h1:
+    def  __init__(self, engine: Engine):
+        n, gs = 9, 4
+        self._engine: Engine = engine
+        self.evaluation = 0
+        self.grid_distance_p1 = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
+        self.norm_distance_p1 = np.floor(np.linalg.norm(np.mgrid[0:9, 0:9][:, ::-1, :], axis=0))
+        self.norm_distance_p1[n - gs:, :gs] = np.triu(self.norm_distance_p1[n - gs:, :gs])
+        
+    def move(self):
+        if self._engine.game_state[2]:
+            heuristic = self.norm_distance_p1.T + self.grid_distance_p1.T
+        else:
+            heuristic = self.norm_distance_p1 + self.grid_distance_p1
+        
+        possible_moves = self._engine.results(self._engine.actions())
+        possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
+
+        # save current engine state for resetting
+        cur_p1_mask = self._engine._p1_mask
+        cur_p2_mask = self._engine._p2_mask
+        cur_turn = self._engine.is_p2_turn
+        cur_turn_count = self._engine.turn_count
+
+        # iterate through possible moves
+        for i, move in enumerate(possible_moves):
+
+            # check if move achieves goal state
+            if self._engine.update_state(move):
+                # if it does, reset effects of update_state and return updated state
+                self._engine._p1_mask = cur_p1_mask
+                self._engine._p2_mask = cur_p2_mask
+                self._engine.is_p2_turn = cur_turn
+                self._engine.turn_count = cur_turn_count
+                return self._engine.update_state(move)
+            # if not, get the best move for the other player, update the state, and then add our next best move heuristic to the heuristic list
+            else:
+                # make best move for other player
+                other_player_moves = self._engine.results(self._engine.actions())
+                other_player_heuristic = heuristic.T
+                other_player_move_heuristic = np.sum(other_player_heuristic * other_player_moves, axis=(1,2))
+                other_player_best_move_index = np.where(other_player_move_heuristic == np.min(other_player_move_heuristic))
+                other_player_best_move = other_player_moves[np.random.choice(other_player_best_move_index[0])]
+                self._engine.update_state(other_player_best_move)
+
+                # get heuristic for our next best move
+                possible_next_moves = self._engine.results(self._engine.actions())
+                next_move_heuristics = np.sum(heuristic * possible_next_moves, axis=(1, 2))
+                possible_moves_heuristics[i] += np.min(next_move_heuristics)
+
+            # restore state to our original turn
+            self._engine._p1_mask = cur_p1_mask
+            self._engine._p2_mask = cur_p2_mask
+            self._engine.is_p2_turn = cur_turn
+            self._engine.turn_count = cur_turn_count
+
+        self.evaluation = possible_moves_heuristics
+        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
+        return self._engine.update_state(best_move)
+
+# minimax h2
+class MiniMax_h2:
+    def  __init__(self, engine: Engine):
+        n, gs = 9, 4
+        self._engine: Engine = engine
+        self.heuristic = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
+        self.evaluation = 0
+        
+    def move(self):
+        # set heuristic based on turn
+        if self._engine.game_state[2]:
+            heuristic = self.heuristic.T
+        else:
+            heuristic = self.heuristic
+        
+        possible_moves = self._engine.results(self._engine.actions())
+        possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
+
+        # save current engine state for resetting
+        cur_p1_mask = self._engine._p1_mask
+        cur_p2_mask = self._engine._p2_mask
+        cur_turn = self._engine.is_p2_turn
+        cur_turn_count = self._engine.turn_count
+
+        # iterate through possible moves
+        for i, move in enumerate(possible_moves):
+
+            # check if move achieves goal state
+            if self._engine.update_state(move):
+                # if it does, reset effects of update_state and return updated state
+                self._engine._p1_mask = cur_p1_mask
+                self._engine._p2_mask = cur_p2_mask
+                self._engine.is_p2_turn = cur_turn
+                self._engine.turn_count = cur_turn_count
+                return self._engine.update_state(move)
+            # if not, get the best move for the other player, update the state, and then add our next best move heuristic to the heuristic list
+            else:
+                # make best move for other player
+                other_player_moves = self._engine.results(self._engine.actions())
+                other_player_heuristic = heuristic.T
+                other_player_move_heuristic = np.sum(other_player_heuristic * other_player_moves, axis=(1,2))
+                other_player_best_move_index = np.where(other_player_move_heuristic == np.min(other_player_move_heuristic))
+                other_player_best_move = other_player_moves[np.random.choice(other_player_best_move_index[0])]
+                self._engine.update_state(other_player_best_move)
+
+                # get heuristic for our next best move
+                possible_next_moves = self._engine.results(self._engine.actions())
+                next_move_heuristics = np.sum(heuristic * possible_next_moves, axis=(1, 2))
+                possible_moves_heuristics[i] += np.min(next_move_heuristics)
+
+            # restore state to our original turn
+            self._engine._p1_mask = cur_p1_mask
+            self._engine._p2_mask = cur_p2_mask
+            self._engine.is_p2_turn = cur_turn
+            self._engine.turn_count = cur_turn_count
+
+        self.evaluation = possible_moves_heuristics
+        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
+        return self._engine.update_state(best_move)
+
+# minimax h1 AND h2
+class MiniMax_h1_h2:
+    def  __init__(self, engine: Engine):
+        n, gs = 9, 4
+        self._engine: Engine = engine
+        self.evaluation = 0
+        self.grid_distance_p1 = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
+        self.norm_distance_p1 = np.floor(np.linalg.norm(np.mgrid[0:9, 0:9][:, ::-1, :], axis=0))
+        self.norm_distance_p1[n - gs:, :gs] = np.triu(self.norm_distance_p1[n - gs:, :gs])
+        
+    def move(self):
+        if self._engine.game_state[2]:
+            if self._engine.turn_count < 50:
+                heuristic = self.norm_distance_p1.T + self.grid_distance_p1.T
+            else:
+                heuristic = self.grid_distance_p1.T
+
+        else:
+            if self._engine.turn_count < 50:
+                heuristic = self.norm_distance_p1 + self.grid_distance_p1
+            else:
+                heuristic = self.grid_distance_p1
+        
+        possible_moves = self._engine.results(self._engine.actions())
+        possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
+
+        # save current engine state for resetting
+        cur_p1_mask = self._engine._p1_mask
+        cur_p2_mask = self._engine._p2_mask
+        cur_turn = self._engine.is_p2_turn
+        cur_turn_count = self._engine.turn_count
+
+        # iterate through possible moves
+        for i, move in enumerate(possible_moves):
+
+            # check if move achieves goal state
+            if self._engine.update_state(move):
+                # if it does, reset effects of update_state and return updated state
+                self._engine._p1_mask = cur_p1_mask
+                self._engine._p2_mask = cur_p2_mask
+                self._engine.is_p2_turn = cur_turn
+                self._engine.turn_count = cur_turn_count
+                return self._engine.update_state(move)
+            # if not, get the best move for the other player, update the state, and then add our next best move heuristic to the heuristic list
+            else:
+                # make best move for other player
+                other_player_moves = self._engine.results(self._engine.actions())
+                other_player_heuristic = heuristic.T
+                other_player_move_heuristic = np.sum(other_player_heuristic * other_player_moves, axis=(1,2))
+                other_player_best_move_index = np.where(other_player_move_heuristic == np.min(other_player_move_heuristic))
+                other_player_best_move = other_player_moves[np.random.choice(other_player_best_move_index[0])]
+                self._engine.update_state(other_player_best_move)
+
+                # get heuristic for our next best move
+                possible_next_moves = self._engine.results(self._engine.actions())
+                next_move_heuristics = np.sum(heuristic * possible_next_moves, axis=(1, 2))
+                possible_moves_heuristics[i] += np.min(next_move_heuristics)
+
+            # restore state to our original turn
+            self._engine._p1_mask = cur_p1_mask
+            self._engine._p2_mask = cur_p2_mask
+            self._engine.is_p2_turn = cur_turn
+            self._engine.turn_count = cur_turn_count
+
+        self.evaluation = possible_moves_heuristics
+        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
+        return self._engine.update_state(best_move)
+    
+# minimax norm then grid
+class MiniMax_norm_grid:
+    def  __init__(self, engine: Engine):
+        n, gs = 9, 4
+        self._engine: Engine = engine
+        self.evaluation = 0
+        self.grid_distance_p1 = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
+        self.norm_distance_p1 = np.floor(np.linalg.norm(np.mgrid[0:9, 0:9][:, ::-1, :], axis=0))
+        self.norm_distance_p1[n - gs:, :gs] = np.triu(self.norm_distance_p1[n - gs:, :gs])
+        
+    def move(self):
+        if self._engine.game_state[2]:
+            if self._engine.turn_count < 50:
+                heuristic = self.norm_distance_p1.T
+            else:
+                heuristic = self.grid_distance_p1.T
+
+        else:
+            if self._engine.turn_count < 50:
+                heuristic = self.norm_distance_p1
+            else:
+                heuristic = self.grid_distance_p1
+        
+        possible_moves = self._engine.results(self._engine.actions())
+        possible_moves_heuristics = np.sum(heuristic * possible_moves, axis=(1, 2))
+
+        # save current engine state for resetting
+        cur_p1_mask = self._engine._p1_mask
+        cur_p2_mask = self._engine._p2_mask
+        cur_turn = self._engine.is_p2_turn
+        cur_turn_count = self._engine.turn_count
+
+        # iterate through possible moves
+        for i, move in enumerate(possible_moves):
+
+            # check if move achieves goal state
+            if self._engine.update_state(move):
+                # if it does, reset effects of update_state and return updated state
+                self._engine._p1_mask = cur_p1_mask
+                self._engine._p2_mask = cur_p2_mask
+                self._engine.is_p2_turn = cur_turn
+                self._engine.turn_count = cur_turn_count
+                return self._engine.update_state(move)
+            # if not, get the best move for the other player, update the state, and then add our next best move heuristic to the heuristic list
+            else:
+                # make best move for other player
+                other_player_moves = self._engine.results(self._engine.actions())
+                other_player_heuristic = heuristic.T
+                other_player_move_heuristic = np.sum(other_player_heuristic * other_player_moves, axis=(1,2))
+                other_player_best_move_index = np.where(other_player_move_heuristic == np.min(other_player_move_heuristic))
+                other_player_best_move = other_player_moves[np.random.choice(other_player_best_move_index[0])]
+                self._engine.update_state(other_player_best_move)
+
+                # get heuristic for our next best move
+                possible_next_moves = self._engine.results(self._engine.actions())
+                next_move_heuristics = np.sum(heuristic * possible_next_moves, axis=(1, 2))
+                possible_moves_heuristics[i] += np.min(next_move_heuristics)
+
+            # restore state to our original turn
+            self._engine._p1_mask = cur_p1_mask
+            self._engine._p2_mask = cur_p2_mask
+            self._engine.is_p2_turn = cur_turn
+            self._engine.turn_count = cur_turn_count
+
+        self.evaluation = possible_moves_heuristics
+        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
+        return self._engine.update_state(best_move)
     
 class  MCTSAI: 
     def  __init__(self, engine, explorationWeight=1.4, iterations=500):
@@ -262,7 +523,10 @@ class  MCTSAI:
             return self.e.results(self.e.actions())
         
         def getBestLegalMoves(self):
-            heuristic = np.sum(self.heuristic * self.getLegalMoves(), axis=(1,2))    
+            if self.player:
+                heuristic = np.sum(self.heuristic.T * self.getLegalMoves(), axis=(1,2))    
+            else:
+                heuristic = np.sum(self.heuristic * self.getLegalMoves(), axis=(1,2))    
             best_moves_index = np.where(heuristic == np.min(heuristic))[0]
             best_moves = np.empty((0,) + self.getLegalMoves().shape[1:], dtype=self.getLegalMoves().dtype)
             for x in best_moves_index:
@@ -377,6 +641,8 @@ class  MCTSAI:
             selected_node.visits += 1
             selected_node.reward += reward
             selected_node = selected_node.parent
+
+
     
 
 # class SortaGreedyTreeSearchAI: # WIP
@@ -422,3 +688,5 @@ class  MCTSAI:
 #                 expanded_nodes.append(cs)
 #         best = np.max(np.sum(distance[None] * frontier, axis=(1, 2)), axis=0)
 #         return frontier[0]
+
+
