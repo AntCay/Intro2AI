@@ -37,7 +37,7 @@ class randomAI:
  [ 0  1  2  3  4  5  6  7  8]]
 """
 
-class ChooseGreedyNodeAI_h1:
+class StochasticGreedy_h1:
     def __init__(self, engine):
         n, gs = 9, 4
         self._engine = engine
@@ -56,7 +56,7 @@ class ChooseGreedyNodeAI_h1:
         best_move = possible_moves[np.argmin(np.sum(distance[None] * possible_moves, axis=(1,2)))]
         return self._engine.update_state(best_move)
 
-class ChooseGreedyNodeAI_h2:
+class StochasticGreedy_h2:
     def __init__(self, engine):
         n, gs = 9, 4
         self._engine = engine
@@ -83,7 +83,6 @@ class StochasticBestGreedy_h1:
         self.norm_distance_p1[n - gs:, :gs] = np.triu(self.norm_distance_p1[n - gs:, :gs])
         
     def move(self):
-        self.cost += 1
         if self._engine.game_state[2]:
             heuristic = self.norm_distance_p1.T + self.grid_distance_p1.T
         else:
@@ -104,7 +103,6 @@ class StochasticBestGreedy_h2:
         self.heuristic = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
         
     def move(self):
-        self.cost += 1
         if self._engine.game_state[2]:
             heuristic = self.heuristic.T
         else:
