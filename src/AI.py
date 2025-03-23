@@ -73,12 +73,11 @@ class ChooseGreedyNodeAI_h2:
         best_move = possible_moves[np.argmin(np.sum(distance[None] * possible_moves, axis=(1,2)))]
         return self._engine.update_state(best_move)
     
-class AStarAI_h1:
+# Stochastic Best Greedy Algorithm with heuristic 1 as the heuristic function
+class StochasticBestGreedy_h1:
     def  __init__(self, engine):
         n, gs = 9, 4
         self._engine = engine
-        self.cost = 0
-        self.evaluation = 0
         self.grid_distance_p1 = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
         self.norm_distance_p1 = np.floor(np.linalg.norm(np.mgrid[0:9, 0:9][:, ::-1, :], axis=0))
         self.norm_distance_p1[n - gs:, :gs] = np.triu(self.norm_distance_p1[n - gs:, :gs])
@@ -92,21 +91,17 @@ class AStarAI_h1:
         
         possible_moves = self._engine.results(self._engine.actions())
             
-        heuristic_all = np.sum(heuristic * possible_moves, axis=(1,2))
-        
-        self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))        
-        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        heuristic_all = np.sum(heuristic * possible_moves, axis=(1,2))      
+        best_moves_index = np.where(heuristic_all == np.min(heuristic_all))
         best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
         return self._engine.update_state(best_move)
 
-# A* Algorithm with Manhattan Distance as a heuristic function
-class AStarAI_h2:
+# Stochastic Best Greedy Algorithm with heuristic 2 as the heuristic function
+class StochasticBestGreedy_h2:
     def  __init__(self, engine):
         n, gs = 9, 4
         self._engine = engine
         self.heuristic = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
-        self.cost = 0
-        self.evaluation = 0
         
     def move(self):
         self.cost += 1
@@ -118,10 +113,8 @@ class AStarAI_h2:
         possible_moves = self._engine.results(self._engine.actions())
             
         heuristic_all = np.sum(heuristic * possible_moves, axis=(1,2))
-        
-        self.evaluation = np.add(heuristic_all, np.full(heuristic_all.shape, self.cost))
 
-        best_moves_index = np.where(self.evaluation == np.min(self.evaluation))
+        best_moves_index = np.where(heuristic_all == np.min(heuristic_all))
         best_move = possible_moves[np.random.choice(best_moves_index[0])] # Pick random move from best moves if it more than 1
         return self._engine.update_state(best_move)
     
