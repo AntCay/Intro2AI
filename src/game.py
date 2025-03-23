@@ -2,9 +2,7 @@ import pygame
 from settings import *
 from board import *
 from utilities import *
-import AI
 from AI import *
-import inspect
 import math
 import numpy as np
 import time
@@ -35,9 +33,6 @@ class Game:
         
         self._aiOptionButton = []
         self._aiList = []
-        for i in range(len(inspect.getmembers(AI, inspect.isclass))):      
-            self._aiOptionButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, inspect.getmembers(AI, inspect.isclass)[i][0], (300, 100), ((WIDTH - 200)*0.4, (HEIGHT - 100)*(0.4+i*0.1))))
-        
         self._loopNum = 0
         self._gameMode = 0
         self._engine = engine
@@ -107,8 +102,6 @@ class Game:
             return self.mainMenuLoop()
         elif self._loopNum == 1:
             return self.gamePlayLoop()
-        elif self._loopNum == 2:
-            return self.AIMenuLoop()
         # return True
     
     def gamePlayLoop(self):
@@ -117,7 +110,12 @@ class Game:
         if not self._end:
             if self._currentPlayer.isAI:
                 time.sleep(SLEEP_DURATION)
+                millis_ns = int(time.time() * 1000)
                 self._currentPlayer.ai.move()
+                if isinstance(self._currentPlayer.ai, MCTSAI):
+                    millis_ns = int(time.time() * 1000) - millis_ns
+                    with open("../result/MCTS_Computation_Time.csv", mode='a', newline='') as file:
+                        file.write(f"{millis_ns}\n")
                 self._moveCount += 1
                 self.updateBoardState()
                 for event in pygame.event.get():
@@ -213,36 +211,6 @@ class Game:
                 return False
 
         return True
-    
-    def AIMenuLoop(self):
-        self.screen.fill(WHITE)
-        titleText = pygame.font.Font(size=int(WIDTH*0.08)).render(
-            "Chinese Checkers", True, 'green')
-        titleTextRect = titleText.get_rect()
-        titleTextRect.center = (WIDTH*0.5, HEIGHT*0.25)
-        self.screen.blit(titleText, titleTextRect)
-        
-        for btn in self._aiOptionButton:
-            btn.draw()
-        
-        self._backButton.draw()
-        
-        pygame.display.flip()
-        
-        for event in pygame.event.get():
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if self._backButton.rect.collidepoint(event.pos):
-                    self._loopNum = 0
-                else:
-                    for i in self._aiOptionButton:
-                        if i.rect.collidepoint(event.pos):
-                            i.color = 'green'
-                            self._loopNum = 1
-                    
-            elif event.type == pygame.QUIT:
-                return False
-            
-        return True
         
     def drawGamePlay(self):
         self.board.drawBoard()
@@ -275,7 +243,7 @@ class Game:
                 pygame.draw.circle(self._screen, self._player[i].color, (int(x), int(y)), CIRCLE_RADIUS)
                 pygame.draw.circle(self._screen, BLACK, (int(x), int(y)), CIRCLE_RADIUS, 2)
                 row, col = boardToEngine((row,col))
-                self.drawCoordinates(f"{row},{col}", (int(x), int(y)))
+                # self.drawCoordinates(f"{row},{col}", (int(x), int(y)))
         return
     
     def drawLegalMoves(self):
@@ -294,19 +262,14 @@ class Game:
     
     def handleClick(self, pos):
         self.clickedPiece = pos
-        print(self.clickedPiece)
         if self.clickedPiece in self._board.board:
             if self.clickedPiece in self._currentPlayer.boardPos:
                 self._selectedPiece = (self._currentPlayer.color, self.clickedPiece)
-                print(f"Select piece: {(self._selectedPiece[0], boardToEngine(self._selectedPiece[1]))}")
-                # print(f"Select piece:  {self._selectedPiece}")
                 for i, moves in self._currentPlayer.legalMoves:
                     if self._selectedPiece[1] == i:
                         movesE = []
                         for move in moves:
                             movesE.append(boardToEngine(move))
-                        # print(f"current legal moves: {movesE}")
-                        # print(f"legal moves : {moves}")
                 return 0
             if self._selectedPiece:
                 for i, moves in self._currentPlayer.legalMoves:
@@ -315,8 +278,6 @@ class Game:
                         return 1
     
     def movePiece(self):
-        # fprint(f"move to {boardToEngine(self.clickedPiece)}")
-        # print(f"move to {self.clickedPiece}")
         self._currentPlayer.removePiece(self._selectedPiece[1])
         self._currentPlayer.addPiece(self.clickedPiece)
         self.clickedPiece = None
@@ -333,8 +294,11 @@ class Game:
     def updateBoardState(self):
         if self._engine.is_goal():
             self._end = True
-            self._winner = self._currentPlayer
-            
+            if self._engine.is_p2_win:
+                self._winner = self._player[1]
+            else: 
+                self._winner = self._player[0]
+                
             if(self._winner == self._player[0]):
                 state = np.logical_xor(self._engine.p2_mask, self._engine.goal_map_p1.T)
                 heuristic = np.sum(np.mgrid[0:9, 0:9][:, ::-1, :],axis=0).T
@@ -349,7 +313,6 @@ class Game:
             for i in range(len(left_pieces)):
                 moves_left = moves_left + abs(left_pieces[i][0] - left_goal[i][0]) + abs(left_pieces[i][1] - left_goal[i][1])
             self._result.append([self._replay,self._winner.name, self._moveCount, len(left_pieces), int(moves_left)])
-            # print(f"It's goal: {self._engine.game_state}")
         elif self._moveCount >= MAX_MOVES:
             self._end = True
             self._result.append([self._replay,"-", "~", "-"])
