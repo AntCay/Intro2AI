@@ -30,7 +30,7 @@ def engineToBoard(position):
 
 def boardToEngine(position):
     x, y = position
-    enginePos = None
+    enginePos = (x, y)
     if y-x == -4:
         enginePos = (x - 8, 0)
     elif y-x == -2:

@@ -53,6 +53,8 @@ class Board:
             x, y = getPixelCoordinates(row, col)
             pygame.draw.circle(self.screen, GRAY, (int(x), int(y)), CIRCLE_RADIUS)
             pygame.draw.circle(self.screen, BLACK, (int(x), int(y)), CIRCLE_RADIUS, 2)
+            row, col = boardToEngine((row,col))
+            # self.drawCoordinates(f"{row},{col}", (int(x), int(y)))
         pygame.draw.rect(self.screen, BLACK, pygame.Rect(WIDTH - 650, 150, 600, 200), 2)
         text_surface = GAME_STATUS_FONT.render("Game Status", True, BLACK)
         text_rect = text_surface.get_rect(topleft = (WIDTH - 640, 160))
@@ -68,6 +70,11 @@ class Board:
         self._screen.blit(text_surface, text_rect)
         text_surface = GAME_STATUS_FONT.render("Match Number:", True, BLACK)
         text_rect = text_surface.get_rect(topleft = (WIDTH - 640, 290))
+        self._screen.blit(text_surface, text_rect)
+    
+    def drawCoordinates(self, text, position):
+        text_surface = CORDINATES_FONT.render(text, True, BLACK)
+        text_rect = text_surface.get_rect(center=position)
         self._screen.blit(text_surface, text_rect)
 
 class Pieces:
