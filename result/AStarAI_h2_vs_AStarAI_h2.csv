@@ -1,3 +1,0 @@
-match_number,winner,moves_count,loser's_pieces_left,loser's_moves_left
-1,AStarAI_h2,114,4,22
-2,AStarAI_h2,108,4,11

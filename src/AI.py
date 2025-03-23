@@ -179,7 +179,7 @@ class LookAhead_h2:
         return self._engine.update_state(best_move)
     
 class  MCTSAI: 
-    def  __init__(self, engine, explorationWeight=0.5, iterations=500):
+    def  __init__(self, engine, explorationWeight=1.4, iterations=500):
         n, gs = 9, 4
         self._engine = engine
         self.heuristic = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
