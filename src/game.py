@@ -305,7 +305,7 @@ class Game:
                 self._winner = self._player[1]
             else: 
                 self._winner = self._player[0]
-                
+            self._engine.turn_count = 0   
             if(self._winner == self._player[0]):
                 state = np.logical_xor(self._engine.p2_mask, self._engine.goal_map_p1.T)
                 heuristic = np.sum(np.mgrid[0:9, 0:9][:, ::-1, :],axis=0).T

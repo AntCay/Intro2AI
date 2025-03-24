@@ -486,9 +486,10 @@ class MiniMax_norm_grid:
         return self._engine.update_state(best_move)
     
 class  MCTSAI: 
-    def  __init__(self, engine, explorationWeight=1.4, iterations=500):
+    def  __init__(self, engine, explorationWeight=1.4, iterations=200):
         n, gs = 9, 4
         self._engine = engine
+        self.auxAL = MiniMax_h1_h2(self._engine)
         self.heuristic = np.sum(np.mgrid[0:n, 0:n][:, ::-1, :],axis=0)
         self.cost = 0
         self.evaluation = 0
@@ -544,17 +545,22 @@ class  MCTSAI:
     
     def move(self):
         e = Engine()
-        e.p1_mask = self._engine.p1_mask
-        e.p2_mask = self._engine.p2_mask
-        e.is_p2_turn = self._engine.is_p2_turn
-        root_node = self.Node(e.game_state)
-        # start MCTS Algorithm
-        self.mcts(root_node)
-        best_move = max(
-            root_node.children.items(),
-            key=lambda item: (item[1].reward / item[1].visits if item[1].visits != 0 else -float('inf'))
-        )[0] # Choose the best move of children that has highest average reward
-        return self._engine.update_state(np.array(best_move))  
+        if self._engine.turn_count < 40:
+           return self.auxAL.move()
+        elif self._engine.turn_count > 60:
+            return self.auxAL.move()
+        else:
+            e.p1_mask = self._engine.p1_mask
+            e.p2_mask = self._engine.p2_mask
+            e.is_p2_turn = self._engine.is_p2_turn
+            root_node = self.Node(e.game_state)
+            # start MCTS Algorithm
+            self.mcts(root_node)
+            best_move = max(
+                root_node.children.items(),
+                key=lambda item: (item[1].reward / item[1].visits if item[1].visits != 0 else -float('inf'))
+            )[0] # Choose the best move of children that has highest average reward
+            return self._engine.update_state(np.array(best_move))  
     
     def mcts(self, root_node):
         for _ in range(self.iterations):
