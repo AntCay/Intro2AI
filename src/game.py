@@ -7,7 +7,6 @@ import math
 import numpy as np
 import time
 import csv
-from copy import deepcopy
 
 class Game:
     def __init__(self, screen, player, engine, maxMatches, result_path):
