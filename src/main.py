@@ -3,7 +3,6 @@ from settings import *
 from game import Game
 from engine import Engine
 from player import Player
-import time
 from AI import *
 import numpy as np
 import sys
