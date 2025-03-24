@@ -28,12 +28,10 @@ class Game:
         self._closeButton = Button(self._screen, 'red', BUTTON_MENU_FONT, "Close", (150, 75), (WIDTH - 200, 50))
         self._stopButton = Button(self._screen, 'red', BUTTON_MENU_FONT, "Stop", (150, 75), (WIDTH - 375, 50))
         self._mainMenuButton = []
-        self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "AI vs AI", (200, 100), ((WIDTH - 200)*0.4, (HEIGHT - 100)*0.4)))
+        self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "AI vs AI", (200, 100), ((WIDTH - 200)*0.25, (HEIGHT - 100)*0.4)))
         self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "Player vs AI", (200, 100), ((WIDTH - 200)*0.5, (HEIGHT - 100)*0.4)))
-        self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "Player vs Player", (200, 100), ((WIDTH - 200)*0.6, (HEIGHT - 100)*0.4)))
+        self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "Player vs Player", (200, 100), ((WIDTH - 200)*0.75, (HEIGHT - 100)*0.4)))
         
-        self._aiOptionButton = []
-        self._aiList = []
         self._loopNum = 0
         self._gameMode = 0
         self._engine = engine
