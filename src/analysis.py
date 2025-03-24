@@ -64,43 +64,60 @@ def plot_histograms(all_results, images_folder):
     plt.xlabel('Algorithm')
     plt.ylabel('Number of Wins')
     plt.title('Win Distribution Across All Files')
+    plt.xticks(rotation=45)  # Rotate x-axis labels
+    plt.tight_layout()       # Ensure everything fits
     plt.savefig(os.path.join(images_folder, 'win_distribution.png'))
     plt.show()
 
-    # Create a single figure with subplots for move counts (one subplot per algorithm)
-    num_algorithms = len(move_counts)
-    if num_algorithms == 0:
-        print("No valid move counts to plot.")
-        return
+    # Create figures for move counts with a maximum of 6 subplots per figure
+    algorithms = list(move_counts.items())
+    total_algorithms = len(algorithms)
+    chunk_size = 6
 
-    # Determine the number of rows and columns for the subplots
-    num_cols = int(num_algorithms**0.5)
-    num_rows = (num_algorithms + num_cols - 1) // num_cols
+    for chunk_index in range(0, total_algorithms, chunk_size):
+        chunk_algos = algorithms[chunk_index:chunk_index+chunk_size]
+        current_chunk_size = len(chunk_algos)
+        
+        # Determine the layout: best to have up to 3 columns per row
+        num_cols = min(3, current_chunk_size)
+        num_rows = (current_chunk_size + num_cols - 1) // num_cols
 
-    fig, axes = plt.subplots(
-        nrows=num_rows,
-        ncols=num_cols,
-        figsize=(5 * num_cols, 5 * num_rows),
-        squeeze=False
-    )
+        fig, axes = plt.subplots(
+            nrows=num_rows,
+            ncols=num_cols,
+            figsize=(5 * num_cols, 5 * num_rows),
+            squeeze=False
+        )
 
-    # Plot a histogram on each subplot
-    for idx, (algorithm, counts) in enumerate(move_counts.items()):
-        row = idx // num_cols
-        col = idx % num_cols
-        ax = axes[row, col]
-        ax.hist(counts, bins=20, alpha=0.75)
-        ax.set_xlabel('Move Count')
-        ax.set_ylabel('Number of wins')
-        ax.set_title(f'{algorithm}')
+        plt.subplots_adjust(wspace=0.4, hspace=0.4)
 
-    # Hide any unused subplots
-    for idx in range(num_algorithms, num_rows * num_cols):
-        fig.delaxes(axes.flatten()[idx])
+        # Rotate x-axis labels for each subplot
+        for ax_row in axes:
+            for ax in ax_row:
+                for label in ax.get_xticklabels():
+                    label.set_rotation(45)
 
-    plt.tight_layout()
-    plt.savefig(os.path.join(images_folder, 'move_count_distribution_subplots.png'))
-    plt.show()
+        # Plot a histogram on each subplot for the current chunk
+        for idx, (algorithm, counts) in enumerate(chunk_algos):
+            row = idx // num_cols
+            col = idx % num_cols
+            ax = axes[row, col]
+            ax.hist(counts, bins=20, alpha=0.75)
+            ax.set_xlabel('Move Count')
+            ax.set_ylabel('Number of wins')
+            ax.set_title(f'{algorithm}')
+
+        # Hide any unused subplots in this figure
+        total_subplots = num_rows * num_cols
+        for idx in range(current_chunk_size, total_subplots):
+            fig.delaxes(axes.flatten()[idx])
+
+        fig.tight_layout()
+        fig_filename = os.path.join(
+            images_folder, f'move_count_distribution_subplots_{(chunk_index // chunk_size) + 1}.png'
+        )
+        plt.savefig(fig_filename)
+        plt.show()
 
 def main():
     # Adjust this path to point to your "result" folder
