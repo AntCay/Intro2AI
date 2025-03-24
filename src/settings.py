@@ -10,6 +10,7 @@ CELL_SIZE = int(HEIGHT/20)
 CIRCLE_RADIUS = CELL_SIZE // 2.5
 SLEEP_DURATION = 0
 MAX_MOVES = 500
+MAX_MATCHES = 1
 TITLE = "Chinese Checkers"
 WHITE, BLACK, GRAY = (255, 255, 255), (0, 0, 0), (200, 200, 200)
 COLORS = ["red", "orange", "yellow", "green", "purple", "blue"]

@@ -144,7 +144,7 @@ class Game:
         
         else:
             # time.sleep(1)
-            if(self._replay != self._maxMatches + 1):
+            if(self._replay != self._maxMatches):
                 if(self._replay == int(self._maxMatches/2 + 1)):
                     temp = self._player[0].ai
                     self._player[0].ai = self._player[1].ai
@@ -157,12 +157,12 @@ class Game:
                 with open(self._result_path, mode='w', newline='') as file:
                     writer = csv.writer(file)
                     writer.writerows(self._result)
-                self.restart()
+                # self.restart()
                 self._result = [
                     ["match_number", "winner", "moves_count", "loser's_pieces_left", "loser's_moves_left"]
                 ]
-                self._replay = 1
-                self._loopNum = 0
+                # self._replay = 1
+                # self._loopNum = 0
                 # return False    
             for event in pygame.event.get():
                 if event.type == pygame.MOUSEBUTTONDOWN:
