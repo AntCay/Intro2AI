@@ -32,7 +32,7 @@ class Game:
         self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "Player vs AI", (200, 100), ((WIDTH - 200)*0.5, (HEIGHT - 100)*0.4)))
         self._mainMenuButton.append(Button(self._screen, 'blue', BUTTON_MENU_FONT, "Player vs Player", (200, 100), ((WIDTH - 200)*0.75, (HEIGHT - 100)*0.4)))
         
-        self._loopNum = 0
+        self._loopNum = 0 
         self._gameMode = 0
         self._engine = engine
         self._playerNum = len(player)
